@@ -2,6 +2,9 @@
 
 A Laravel REST API for managing orders and payments with JWT authentication and extensible payment gateway system using the Strategy pattern.
 
+[![PHP Version](https://img.shields.io/badge/PHP-%5E8.3-blue)](https://php.net)
+[![Laravel Version](https://img.shields.io/badge/Laravel-%5E13.8-red)](https://laravel.com)
+
 ## Features
 
 - **JWT Authentication** - Secure user registration, login, and logout
