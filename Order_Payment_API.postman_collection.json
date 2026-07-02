@@ -1,0 +1,804 @@
+{
+  "info": {
+    "name": "Order and Payment Management API",
+    "description": "Laravel API for managing orders and payments with JWT authentication and extensible payment gateway system. All authenticated endpoints require JWT Bearer token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.token);",
+                  "    pm.test('Registration successful', function() {",
+                  "        pm.expect(response).to.have.property('user');",
+                  "        pm.expect(response).to.have.property('token');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"securepass123\",\n  \"password_confirmation\": \"securepass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": ["{{base_url}}"],
+              "path": ["register"]
+            },
+            "description": "Register a new user and receive JWT authentication token. The token is automatically saved to collection variables for use in authenticated requests."
+          },
+          "response": [
+            {
+              "name": "Successful Registration",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 5,\n    \"name\": \"Test User\",\n    \"email\": \"testuser@example.com\"\n  },\n  \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL3JlZ2lzdGVyIiwiaWF0IjoxNzgyOTc5MDAyLCJleHAiOjE3ODI5ODI2MDIsIm5iZiI6MTc4Mjk3OTAwMiwianRpIjoiSjNlRW5oT3hjSWRCZHJVbiIsInN1YiI6IjUiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.ix6Q1vKfPHP8bXfTlP583F-aR-7SCDgK_bMXVTYrrK4\"\n}"
+            },
+            {
+              "name": "Validation Error",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": {\n    \"email\": [\n      \"The email has already been taken.\"\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('jwt_token', response.token);",
+                  "    pm.test('Login successful', function() {",
+                  "        pm.expect(response).to.have.property('user');",
+                  "        pm.expect(response).to.have.property('token');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"securepass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticate user and receive JWT token. Token is automatically saved for subsequent authenticated requests."
+          },
+          "response": [
+            {
+              "name": "Successful Login",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"user\": {\n    \"id\": 5,\n    \"name\": \"Test User\",\n    \"email\": \"testuser@example.com\"\n  },\n  \"token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzgyOTc5MDEyLCJleHAiOjE3ODI5ODI2MTIsIm5iZiI6MTc4Mjk3OTAxMiwianRpIjoid3VZSEFKZmFWQm1wWDd5NCIsInN1YiI6IjUiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.FOjYNBt2t9FbdoD0LaBSniaifQNbt8DPKGxld0CcNY4\"\n}"
+            },
+            {
+              "name": "Invalid Credentials",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid credentials\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Logout successful', function() {",
+                  "        const response = pm.response.json();",
+                  "        pm.expect(response.message).to.eql('Successfully logged out');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            },
+            "description": "Logout the authenticated user and invalidate the JWT token. Requires valid JWT token in Authorization header."
+          },
+          "response": [
+            {
+              "name": "Successful Logout",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Successfully logged out\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('order_id', response.order.id);",
+                  "    pm.test('Order created successfully', function() {",
+                  "        pm.expect(response.order).to.have.property('id');",
+                  "        pm.expect(response.order.status).to.eql('pending');",
+                  "        pm.expect(response.order).to.have.property('items');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_name\": \"MacBook Pro M3\",\n      \"quantity\": 1,\n      \"unit_price\": 2499.99\n    },\n    {\n      \"product_name\": \"Magic Mouse\",\n      \"quantity\": 2,\n      \"unit_price\": 79.99\n    },\n    {\n      \"product_name\": \"USB-C Cable\",\n      \"quantity\": 3,\n      \"unit_price\": 19.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            },
+            "description": "Create a new order with multiple items. Order is created with 'pending' status. Total amount is automatically calculated from items. Order ID is saved to collection variables for subsequent requests."
+          },
+          "response": [
+            {
+              "name": "Order Created Successfully",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"order\": {\n    \"user_id\": 5,\n    \"status\": \"pending\",\n    \"total_amount\": \"2719.94\",\n    \"updated_at\": \"2026-07-02T07:57:32.000000Z\",\n    \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n    \"id\": 5,\n    \"items\": [\n      {\n        \"id\": 11,\n        \"order_id\": 5,\n        \"product_name\": \"MacBook Pro M3\",\n        \"quantity\": 1,\n        \"unit_price\": \"2499.99\",\n        \"subtotal\": \"2499.99\",\n        \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:32.000000Z\"\n      },\n      {\n        \"id\": 12,\n        \"order_id\": 5,\n        \"product_name\": \"Magic Mouse\",\n        \"quantity\": 2,\n        \"unit_price\": \"79.99\",\n        \"subtotal\": \"159.98\",\n        \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:32.000000Z\"\n      },\n      {\n        \"id\": 13,\n        \"order_id\": 5,\n        \"product_name\": \"USB-C Cable\",\n        \"quantity\": 3,\n        \"unit_price\": \"19.99\",\n        \"subtotal\": \"59.97\",\n        \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:32.000000Z\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": ["{{base_url}}"],
+              "path": ["orders"]
+            },
+            "description": "List all orders for the authenticated user with pagination. Returns 15 orders per page by default."
+          },
+          "response": [
+            {
+              "name": "Orders List",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 5,\n      \"user_id\": 5,\n      \"status\": \"confirmed\",\n      \"total_amount\": \"3778.98\",\n      \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n      \"updated_at\": \"2026-07-02T07:58:11.000000Z\"\n    }\n  ],\n  \"first_page_url\": \"http://localhost:8000/api/orders?page=1\",\n  \"from\": 1,\n  \"last_page\": 1,\n  \"last_page_url\": \"http://localhost:8000/api/orders?page=1\",\n  \"links\": [\n    {\n      \"url\": null,\n      \"label\": \"&laquo; Previous\",\n      \"page\": null,\n      \"active\": false\n    },\n    {\n      \"url\": \"http://localhost:8000/api/orders?page=1\",\n      \"label\": \"1\",\n      \"page\": 1,\n      \"active\": true\n    },\n    {\n      \"url\": null,\n      \"label\": \"Next &raquo;\",\n      \"page\": null,\n      \"active\": false\n    }\n  ],\n  \"next_page_url\": null,\n  \"path\": \"http://localhost:8000/api/orders\",\n  \"per_page\": 15,\n  \"prev_page_url\": null,\n  \"to\": 1,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Orders (Filtered by Status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders?status=confirmed",
+              "host": ["{{base_url}}"],
+              "path": ["orders"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "confirmed",
+                  "description": "Filter by status: pending, confirmed, cancelled"
+                }
+              ]
+            },
+            "description": "List orders filtered by status. Available status values: pending, confirmed, cancelled. Useful for viewing orders in specific stages of the order lifecycle."
+          },
+          "response": [
+            {
+              "name": "Filtered Orders",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 5,\n      \"user_id\": 5,\n      \"status\": \"confirmed\",\n      \"total_amount\": \"3778.98\",\n      \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n      \"updated_at\": \"2026-07-02T07:58:11.000000Z\"\n    }\n  ],\n  \"first_page_url\": \"http://localhost:8000/api/orders?status=confirmed&page=1\",\n  \"from\": 1,\n  \"last_page\": 1,\n  \"per_page\": 15,\n  \"to\": 1,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            },
+            "description": "Get details of a specific order including all items and payments. Only the order owner can access this endpoint."
+          },
+          "response": [
+            {
+              "name": "Order Details",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"order\": {\n    \"id\": 5,\n    \"user_id\": 5,\n    \"status\": \"pending\",\n    \"total_amount\": \"2719.94\",\n    \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n    \"updated_at\": \"2026-07-02T07:57:32.000000Z\",\n    \"items\": [\n      {\n        \"id\": 11,\n        \"order_id\": 5,\n        \"product_name\": \"MacBook Pro M3\",\n        \"quantity\": 1,\n        \"unit_price\": \"2499.99\",\n        \"subtotal\": \"2499.99\",\n        \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:32.000000Z\"\n      },\n      {\n        \"id\": 12,\n        \"order_id\": 5,\n        \"product_name\": \"Magic Mouse\",\n        \"quantity\": 2,\n        \"unit_price\": \"79.99\",\n        \"subtotal\": \"159.98\",\n        \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:32.000000Z\"\n      },\n      {\n        \"id\": 13,\n        \"order_id\": 5,\n        \"product_name\": \"USB-C Cable\",\n        \"quantity\": 3,\n        \"unit_price\": \"19.99\",\n        \"subtotal\": \"59.97\",\n        \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:32.000000Z\"\n      }\n    ],\n    \"payments\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_name\": \"MacBook Pro M3 Max\",\n      \"quantity\": 1,\n      \"unit_price\": 3499.00\n    },\n    {\n      \"product_name\": \"Magic Keyboard\",\n      \"quantity\": 1,\n      \"unit_price\": 149.99\n    },\n    {\n      \"product_name\": \"Magic Trackpad\",\n      \"quantity\": 1,\n      \"unit_price\": 129.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            },
+            "description": "Update order items. Only orders with 'pending' status can be updated. Old items are replaced with new items, and total is recalculated."
+          },
+          "response": [
+            {
+              "name": "Order Updated",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"order\": {\n    \"id\": 5,\n    \"user_id\": 5,\n    \"status\": \"pending\",\n    \"total_amount\": \"3778.98\",\n    \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n    \"updated_at\": \"2026-07-02T07:57:58.000000Z\",\n    \"items\": [\n      {\n        \"id\": 14,\n        \"order_id\": 5,\n        \"product_name\": \"MacBook Pro M3 Max\",\n        \"quantity\": 1,\n        \"unit_price\": \"3499.00\",\n        \"subtotal\": \"3499.00\",\n        \"created_at\": \"2026-07-02T07:57:58.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:58.000000Z\"\n      },\n      {\n        \"id\": 15,\n        \"order_id\": 5,\n        \"product_name\": \"Magic Keyboard\",\n        \"quantity\": 1,\n        \"unit_price\": \"149.99\",\n        \"subtotal\": \"149.99\",\n        \"created_at\": \"2026-07-02T07:57:58.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:58.000000Z\"\n      },\n      {\n        \"id\": 16,\n        \"order_id\": 5,\n        \"product_name\": \"Magic Trackpad\",\n        \"quantity\": 1,\n        \"unit_price\": \"129.99\",\n        \"subtotal\": \"129.99\",\n        \"created_at\": \"2026-07-02T07:57:58.000000Z\",\n        \"updated_at\": \"2026-07-02T07:57:58.000000Z\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "Cannot Update Confirmed Order",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Only pending orders can be updated\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}", "confirm"]
+            },
+            "description": "Confirm an order. Changes status from 'pending' to 'confirmed'. Only confirmed orders can accept payments."
+          },
+          "response": [
+            {
+              "name": "Order Confirmed",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"order\": {\n    \"id\": 5,\n    \"user_id\": 5,\n    \"status\": \"confirmed\",\n    \"total_amount\": \"3778.98\",\n    \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n    \"updated_at\": \"2026-07-02T07:58:11.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "{{order_id}}"]
+            },
+            "description": "Delete an order. Note: Orders with existing payments cannot be deleted."
+          },
+          "response": [
+            {
+              "name": "Order Deleted",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "body": ""
+            },
+            {
+              "name": "Cannot Delete Order with Payments",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Cannot delete order with existing payments\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Process Payment (Credit Card)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('payment_id', response.payment.id);",
+                  "    pm.test('Payment processed successfully', function() {",
+                  "        pm.expect(response.payment).to.have.property('id');",
+                  "        pm.expect(response.payment).to.have.property('transaction_id');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": {{order_id}},\n  \"payment_method\": \"credit_card\",\n  \"amount\": 3778.98\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "description": "Process payment via Credit Card gateway. Order must be in 'confirmed' status and payment amount must match order total. Payment ID is saved to collection variables."
+          },
+          "response": [
+            {
+              "name": "Payment Successful",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payment\": {\n    \"id\": 4,\n    \"order_id\": 5,\n    \"payment_method\": \"credit_card\",\n    \"status\": \"successful\",\n    \"amount\": \"3778.98\",\n    \"transaction_id\": \"TXN-1782977926-765253\",\n    \"gateway_response\": {\n      \"gateway\": \"credit_card\",\n      \"message\": \"Payment processed successfully\",\n      \"success\": true,\n      \"timestamp\": \"2026-07-02T07:58:36+00:00\"\n    },\n    \"created_at\": \"2026-07-02T07:58:36.000000Z\",\n    \"updated_at\": \"2026-07-02T07:58:36.000000Z\"\n  }\n}"
+            },
+            {
+              "name": "Payment Failed",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Payment processing failed\",\n  \"gateway_response\": {\n    \"gateway\": \"credit_card\",\n    \"message\": \"Payment declined by gateway\",\n    \"success\": false\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (PayPal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": {{order_id}},\n  \"payment_method\": \"paypal\",\n  \"amount\": 3778.98\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "description": "Process payment via PayPal gateway. Order must be in 'confirmed' status and payment amount must match order total."
+          },
+          "response": [
+            {
+              "name": "PayPal Payment Successful",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payment\": {\n    \"id\": 5,\n    \"order_id\": 5,\n    \"payment_method\": \"paypal\",\n    \"status\": \"successful\",\n    \"amount\": \"3778.98\",\n    \"transaction_id\": \"PAYID-M3XY7ZA1234567890\",\n    \"gateway_response\": {\n      \"gateway\": \"paypal\",\n      \"message\": \"PayPal payment processed successfully\",\n      \"success\": true,\n      \"timestamp\": \"2026-07-02T08:00:00+00:00\"\n    },\n    \"created_at\": \"2026-07-02T08:00:00.000000Z\",\n    \"updated_at\": \"2026-07-02T08:00:00.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Process Payment (Stripe)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": {{order_id}},\n  \"payment_method\": \"stripe\",\n  \"amount\": 3778.98\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "description": "Process payment via Stripe gateway. Order must be in 'confirmed' status and payment amount must match order total."
+          },
+          "response": [
+            {
+              "name": "Stripe Payment Successful",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payment\": {\n    \"id\": 4,\n    \"order_id\": 5,\n    \"payment_method\": \"stripe\",\n    \"status\": \"successful\",\n    \"amount\": \"3778.98\",\n    \"transaction_id\": \"ch_90e5a2b04b9609062a666c65\",\n    \"gateway_response\": {\n      \"gateway\": \"stripe\",\n      \"message\": \"Stripe payment processed successfully\",\n      \"success\": true,\n      \"timestamp\": \"2026-07-02T07:58:36+00:00\"\n    },\n    \"created_at\": \"2026-07-02T07:58:36.000000Z\",\n    \"updated_at\": \"2026-07-02T07:58:36.000000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "description": "List all payments for the authenticated user with pagination. Returns 15 payments per page by default."
+          },
+          "response": [
+            {
+              "name": "Payments List",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 4,\n      \"order_id\": 5,\n      \"payment_method\": \"stripe\",\n      \"status\": \"successful\",\n      \"amount\": \"3778.98\",\n      \"transaction_id\": \"ch_90e5a2b04b9609062a666c65\",\n      \"gateway_response\": {\n        \"gateway\": \"stripe\",\n        \"message\": \"Stripe payment processed successfully\",\n        \"success\": true,\n        \"timestamp\": \"2026-07-02T07:58:36+00:00\"\n      },\n      \"created_at\": \"2026-07-02T07:58:36.000000Z\",\n      \"updated_at\": \"2026-07-02T07:58:36.000000Z\"\n    }\n  ],\n  \"first_page_url\": \"http://localhost:8000/api/payments?page=1\",\n  \"from\": 1,\n  \"last_page\": 1,\n  \"last_page_url\": \"http://localhost:8000/api/payments?page=1\",\n  \"links\": [\n    {\n      \"url\": null,\n      \"label\": \"&laquo; Previous\",\n      \"page\": null,\n      \"active\": false\n    },\n    {\n      \"url\": \"http://localhost:8000/api/payments?page=1\",\n      \"label\": \"1\",\n      \"page\": 1,\n      \"active\": true\n    },\n    {\n      \"url\": null,\n      \"label\": \"Next &raquo;\",\n      \"page\": null,\n      \"active\": false\n    }\n  ],\n  \"next_page_url\": null,\n  \"path\": \"http://localhost:8000/api/payments\",\n  \"per_page\": 15,\n  \"prev_page_url\": null,\n  \"to\": 1,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Payments (Filtered by Order)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments?order_id={{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments"],
+              "query": [
+                {
+                  "key": "order_id",
+                  "value": "{{order_id}}"
+                }
+              ]
+            },
+            "description": "List all payments filtered by specific order ID. Useful for viewing all payment attempts for a particular order."
+          },
+          "response": [
+            {
+              "name": "Filtered Payments",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 4,\n      \"order_id\": 5,\n      \"payment_method\": \"stripe\",\n      \"status\": \"successful\",\n      \"amount\": \"3778.98\",\n      \"transaction_id\": \"ch_90e5a2b04b9609062a666c65\",\n      \"gateway_response\": {\n        \"gateway\": \"stripe\",\n        \"message\": \"Stripe payment processed successfully\",\n        \"success\": true,\n        \"timestamp\": \"2026-07-02T07:58:36+00:00\"\n      },\n      \"created_at\": \"2026-07-02T07:58:36.000000Z\",\n      \"updated_at\": \"2026-07-02T07:58:36.000000Z\"\n    }\n  ],\n  \"first_page_url\": \"http://localhost:8000/api/payments?order_id=5&page=1\",\n  \"from\": 1,\n  \"last_page\": 1,\n  \"per_page\": 15,\n  \"to\": 1,\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "{{payment_id}}"]
+            },
+            "description": "Get details of a specific payment including gateway response and associated order information."
+          },
+          "response": [
+            {
+              "name": "Payment Details",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"payment\": {\n    \"id\": 4,\n    \"order_id\": 5,\n    \"payment_method\": \"stripe\",\n    \"status\": \"successful\",\n    \"amount\": \"3778.98\",\n    \"transaction_id\": \"ch_90e5a2b04b9609062a666c65\",\n    \"gateway_response\": {\n      \"gateway\": \"stripe\",\n      \"message\": \"Stripe payment processed successfully\",\n      \"success\": true,\n      \"timestamp\": \"2026-07-02T07:58:36+00:00\"\n    },\n    \"created_at\": \"2026-07-02T07:58:36.000000Z\",\n    \"updated_at\": \"2026-07-02T07:58:36.000000Z\",\n    \"order\": {\n      \"id\": 5,\n      \"user_id\": 5,\n      \"status\": \"confirmed\",\n      \"total_amount\": \"3778.98\",\n      \"created_at\": \"2026-07-02T07:57:32.000000Z\",\n      \"updated_at\": \"2026-07-02T07:58:11.000000Z\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
